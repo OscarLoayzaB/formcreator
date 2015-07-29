@@ -2,7 +2,7 @@
 class dropdownField extends PluginFormcreatorField
 {
    public function displayField($canEdit = true)
-   {
+   {echo $this->getValue();
       if ($canEdit) {
          $rand     = mt_rand();
          $required = $this->fields['required'] ? ' required' : '';
@@ -56,25 +56,26 @@ class dropdownField extends PluginFormcreatorField
       return _n('Dropdown', 'Dropdowns', 1);
    }
 
-   public static function getPrefs()
-   {
-      return array(
-         'required'       => 1,
-         'default_values' => 0,
-         'values'         => 0,
-         'range'          => 0,
-         'show_empty'     => 1,
-         'regex'          => 0,
-         'show_type'      => 1,
-         'dropdown_value' => 1,
-         'glpi_objects'   => 0,
-         'ldap_values'    => 0,
-      );
-   }
+   // public static function getPrefs()
+   // {
+   //    return array(
+   //       'required'       => 1,
+   //       'default_values' => 0,
+   //       'values'         => 0,
+   //       'range'          => 0,
+   //       'show_empty'     => 1,
+   //       'regex'          => 0,
+   //       'show_type'      => 1,
+   //       'dropdown_value' => 1,
+   //       'glpi_objects'   => 0,
+   //       'ldap_values'    => 0,
+   //    );
+   // }
 
    public static function getJSFields()
    {
-      $prefs = self::getPrefs();
-      return "tab_fields_fields['dropdown'] = 'showFields(" . implode(', ', $prefs) . ");';";
+      // $prefs = self::getPrefs();
+      // return "tab_fields_fields['dropdown'] = 'showFields(" . implode(', ', $prefs) . ");';";
+      return ['required', 'show_empty', 'show_type', 'dropdown_value'];
    }
 }

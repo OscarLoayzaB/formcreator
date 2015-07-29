@@ -4,7 +4,8 @@ require_once('field.interface.php');
 
 abstract class PluginFormcreatorField implements Field
 {
-   const IS_MULTIPLE = false;
+   const IS_MULTIPLE     = false;
+   const CAN_BE_REQUIRED = true;
 
    protected $fields = array();
 

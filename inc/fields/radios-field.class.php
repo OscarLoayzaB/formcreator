@@ -49,25 +49,26 @@ class radiosField extends PluginFormcreatorField
       return __('Radios', 'formcreator');
    }
 
-   public static function getPrefs()
-   {
-      return array(
-         'required'       => 1,
-         'default_values' => 1,
-         'values'         => 1,
-         'range'          => 0,
-         'show_empty'     => 0,
-         'regex'          => 0,
-         'show_type'      => 1,
-         'dropdown_value' => 0,
-         'glpi_objects'   => 0,
-         'ldap_values'    => 0,
-      );
-   }
+   // public static function getPrefs()
+   // {
+   //    return array(
+   //       'required'       => 1,
+   //       'default_values' => 1,
+   //       'values'         => 1,
+   //       'range'          => 0,
+   //       'show_empty'     => 0,
+   //       'regex'          => 0,
+   //       'show_type'      => 1,
+   //       'dropdown_value' => 0,
+   //       'glpi_objects'   => 0,
+   //       'ldap_values'    => 0,
+   //    );
+   // }
 
    public static function getJSFields()
    {
-      $prefs = self::getPrefs();
-      return "tab_fields_fields['radios'] = 'showFields(" . implode(', ', $prefs) . ");';";
+      // $prefs = self::getPrefs();
+      // return "tab_fields_fields['radios'] = 'showFields(" . implode(', ', $prefs) . ");';";
+      return ['required', 'default_values', 'values', 'show_type'];
    }
 }

@@ -83,7 +83,7 @@ class PluginFormcreatorFields
          $classname = $field_type . 'Field';
 
          if(method_exists($classname, 'getJSFields')) {
-            echo PHP_EOL . '            ' . $classname::getJSFields();
+            echo PHP_EOL . '            fieldstoshow.' . $field_type . ' = {' . implode(':true,', $classname::getJSFields()) . ':true};';
          }
       }
    }

@@ -205,7 +205,8 @@ $rand = mt_rand();
             <div id="dropdown_default_value_field">
                <?php
                if((($question->fields['fieldtype'] == 'dropdown')
-                     || ($question->fields['fieldtype'] == 'glpiselect'))
+                     || ($question->fields['fieldtype'] == 'glpiselect')
+                     || ($question->fields['fieldtype'] == 'users'))
                    && !empty($question->fields['values'])
                    && class_exists($question->fields['values'])) {
                   Dropdown::show($question->fields['values'], array(
@@ -416,71 +417,74 @@ $rand = mt_rand();
    </table>
 
    <script type="text/javascript">
+      var fieldstoshow = {none:{}};
+      var tab_fields_fields = [];
+      <?php PluginFormcreatorFields::printAllTabFieldsForJS(); ?>
+
       function changeQuestionType() {
          var value = document.getElementById('dropdown_fieldtype<?php echo $rand; ?>').value;
 
-         if(value != "") {
-            var tab_fields_fields = [];
-            <?php PluginFormcreatorFields::printAllTabFieldsForJS(); ?>
-
-            eval(tab_fields_fields[value]);
+         if ((value != "") && (field = eval('fieldstoshow.' + value))) {
+            showFields(field);
          } else {
-            showFields(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            showFields({});
          }
+         if (value == 'users') change_users();
       }
       changeQuestionType();
 
-      function showFields(required, default_values, values, range, show_empty, regex, show_type, dropdown_value, glpi_object, ldap_values) {
-         if(required) {
+      function showFields(fields) {
+
+         if(fields.required) {
             document.getElementById('dropdown_required<?php echo $rand; ?>').style.display   = 'inline';
             document.getElementById('label_required').style.display                          = 'inline';
          } else {
             document.getElementById('dropdown_required<?php echo $rand; ?>').style.display   = 'none';
             document.getElementById('label_required').style.display                          = 'none';
          }
-         if(default_values) {
+         if(fields.default_values) {
             document.getElementById('default_values').style.display                          = 'inline';
             document.getElementById('label_default_values').style.display                    = 'inline';
          } else {
             document.getElementById('default_values').style.display                          = 'none';
             document.getElementById('label_default_values').style.display                    = 'none';
          }
-         if(show_type) {
+         if(fields.show_type) {
             document.getElementById('dropdown_show_rule<?php echo $rand; ?>').style.display  = 'inline';
             document.getElementById('label_show_type').style.display                         = 'inline';
          } else {
             document.getElementById('dropdown_show_rule<?php echo $rand; ?>').style.display  = 'none';
             document.getElementById('label_show_type').style.display                         = 'none';
          }
-         if(values) {
+         if(fields.values) {
             document.getElementById('values').style.display                                  = 'inline';
             document.getElementById('label_values').style.display                            = 'inline';
          } else {
             document.getElementById('values').style.display                                  = 'none';
             document.getElementById('label_values').style.display                            = 'none';
          }
-         if(dropdown_value) {
-            document.getElementById('dropdown_values_field').style.display = 'inline';
+         if(fields.dropdown_value) {
+            document.getElementById('dropdown_values_field').style.display                   = 'inline';
             document.getElementById('label_dropdown_values').style.display                   = 'inline';
          } else {
-            document.getElementById('dropdown_values_field').style.display = 'none';
+            document.getElementById('dropdown_values_field').style.display                   = 'none';
             document.getElementById('label_dropdown_values').style.display                   = 'none';
          }
-         if(glpi_object) {
-            document.getElementById('glpi_objects_field').style.display = 'inline';
-            document.getElementById('label_glpi_objects').style.display                   = 'inline';
+         if(fields.glpi_objects) {
+            document.getElementById('glpi_objects_field').style.display                      = 'inline';
+            document.getElementById('label_glpi_objects').style.display                      = 'inline';
          } else {
-            document.getElementById('glpi_objects_field').style.display = 'none';
-            document.getElementById('label_glpi_objects').style.display                   = 'none';
+            document.getElementById('glpi_objects_field').style.display                      = 'none';
+            document.getElementById('label_glpi_objects').style.display                      = 'none';
          }
-         if (dropdown_value || glpi_object) {
-            document.getElementById('dropdown_default_value_field').style.display = 'inline';
+         if (fields.dropdown_value || fields.glpi_objects || fields.users) {
+            document.getElementById('dropdown_default_value_field').style.display            = 'inline';
             document.getElementById('label_dropdown_default_value').style.display            = 'inline';
          } else {
-            document.getElementById('dropdown_default_value_field').style.display = 'none';
+            document.getElementById('dropdown_default_value_field').style.display            = 'none';
             document.getElementById('label_dropdown_default_value').style.display            = 'none';
          }
-         if(range) {
+         if(fields.range) {
             document.getElementById('range_min').style.display                               = 'inline';
             document.getElementById('range_max').style.display                               = 'inline';
             document.getElementById('label_range_min').style.display                         = 'inline';
@@ -495,14 +499,14 @@ $rand = mt_rand();
             document.getElementById('label_range').style.display                             = 'none';
             document.getElementById('range_tr').style.display                                = 'none';
          }
-         if(show_empty) {
+         if(fields.show_empty) {
             document.getElementById('show_empty').style.display = 'inline';
             document.getElementById('label_show_empty').style.display                        = 'inline';
          } else {
             document.getElementById('show_empty').style.display = 'none';
             document.getElementById('label_show_empty').style.display                        = 'none';
          }
-         if(regex) {
+         if(fields.regex) {
             document.getElementById('regex').style.display                                   = 'inline';
             document.getElementById('label_regex').style.display                             = 'inline';
             document.getElementById('regex_tr').style.display                                = 'table-row';
@@ -511,17 +515,17 @@ $rand = mt_rand();
             document.getElementById('label_regex').style.display                             = 'none';
             document.getElementById('regex_tr').style.display                                = 'none';
          }
-         if(values || default_values || dropdown_value || glpi_object) {
+         if(fields.values || fields.default_values || fields.dropdown_value || fields.glpi_objects || fields.users) {
             document.getElementById('values_tr').style.display                               = 'table-row';
          } else {
             document.getElementById('values_tr').style.display                               = 'none';
          }
-         if(required || show_empty) {
+         if(fields.required || fields.show_empty) {
             document.getElementById('required_tr').style.display                             = 'table-row';
          } else {
             document.getElementById('required_tr').style.display                             = 'none';
          }
-         if(ldap_values) {
+         if(fields.ldap_values) {
             document.getElementById('glpi_ldap_field').style.display                         = 'inline';
             document.getElementById('label_glpi_ldap').style.display                         = 'inline';
             document.getElementById('ldap_tr').style.display                                 = 'table-row';
@@ -563,6 +567,19 @@ $rand = mt_rand();
             type: "GET",
             data: {
                dropdown_itemtype: glpi_object,
+               rand: "<?php echo $rand; ?>"
+            },
+         }).done(function(response){
+            jQuery("#dropdown_default_value_field").html(response);
+         });
+      }
+
+      function change_users() {
+         jQuery.ajax({
+            url: "<?php echo $GLOBALS['CFG_GLPI']['root_doc']; ?>/plugins/formcreator/ajax/dropdown_values.php",
+            type: "GET",
+            data: {
+               dropdown_itemtype: "User",
                rand: "<?php echo $rand; ?>"
             },
          }).done(function(response){

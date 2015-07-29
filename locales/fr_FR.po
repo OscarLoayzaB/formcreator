@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: GLPI Project - Plugin Formcreator\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-07-30 16:13+0200\n"
-"PO-Revision-Date: 2015-07-16 17:05+0100\n"
+"PO-Revision-Date: 2015-07-21 17:07+0100\n"
 "Last-Translator: Jérémy MOREAU <jmoreau@teclib.com>\n"
 "Language-Team: French (France) (http://www.transifex.com/projects/p/glpi-"
 "project-plugin-formcreator/language/fr_FR/)\n"
@@ -777,3 +777,7 @@ msgstr "Ajouter le message de validation en premier suivi du ticket"
 #: inc/formanswer.class.php:499
 msgid "Cannot generate targets!"
 msgstr "Impossible de générer les destinations !"
+
+#: ajax/dropdown_values.php:9
+msgid "Current user"
+msgstr "Utilisateur courant"
