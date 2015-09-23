@@ -2,20 +2,16 @@ GLPI Formcreator 0.85 ChangeLog
 ===============================
 Version 0.90-1.2.5 + 1.0
 ------------------------
-* Información de Pedido (Documentos).
-  Activar formularios, tabs, subir ficheros y relacion con ticket.
-* Modificación de Pedido en el ticket.
-  Con acciones masivas cambiar Pedido (Form)
+* Información de Pedido (Documentos), activar tab, formulario upload de ficheros y en documentos asociados al ticket generado. 
+* Modificación de Pedido en el ticket, cambiar relación con ticket en la tabla form_items. Con acciones masivas cambiar Pedido (Form).
 * Añadir nuevo nivel de Acceso GROUP_ACCESS
- Acceso al Grupo de Soporte al que pertenece el usuario de la sesion.
- Añadir tab de grupos en el plugin.
- Modificación en las funciones de comprobacion de acceso al Form.
+* Acceso al Grupo de Soporte al que pertenece el usuario de la sesion.
+* Añadir tab de Grupos en el plugin.
+* Modificación en las funciones de comprobación de acceso al Pedido (Form).
 * Incorporar autorización a Showlist de Form para el perfil (SuperAdmin).
-* Incroporar el lenguaje en Español es_ES.po y es_ES.mo.
-* Modificación en la migración a plantillas de ticket. 
-    Incluir el id de form para generar un ticket template por Form.
-* Modificación de metodo de visualizacion de desplegables de Pedidos en acciones masivas y las Categorias en Formulario de Form,
-  Dropdown::Show por Dropdown:ShowArray.
+* Incroporar la traducción al lenguaje en Español es_ES.po y es_ES.mo.
+* Modificación en la migración a plantillas de ticket, incluir el id de form para generar un ticket template por Form.
+* Modificación de metodo de visualizacion de desplegables de Pedidos en acciones masivas y las Categorias en Formulario de Form, Dropdown::Show por Dropdown:ShowArray.
  
 
 
