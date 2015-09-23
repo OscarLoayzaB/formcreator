@@ -1,22 +1,41 @@
 GLPI Formcreator 0.85 ChangeLog
 ===============================
+Version 0.90-1.2.5 + 1.0
+------------------------
+* InformaciÛn de Pedido (Documentos).
+  Activar formularios, tabs, subir ficheros y relacion con ticket.
+* ModificaciÛn de Pedido en el ticket.
+  Con acciones masivas cambiar Pedido (Form)
+* AÒadir nuevo nivel de Acceso GROUP_ACCESS
+ Acceso al Grupo de Soporte al que pertenece el usuario de la sesion.
+ AÒadir tab de grupos en el plugin.
+ ModificaciÛn en las funciones de comprobacion de acceso al Form.
+* Incorporar autorizaciÛn a Showlist de Form para el perfil (SuperAdmin).
+* Incroporar el lenguaje en EspaÒol es_ES.po y es_ES.mo.
+* ModificaciÛn en la migraciÛn a plantillas de ticket. 
+    Incluir el id de form para generar un ticket template por Form.
+* ModificaciÛn de metodo de visualizacion de desplegables de Pedidos en acciones masivas y las Categorias en Formulario de Form,
+  Dropdown::Show por Dropdown:ShowArray.
+ 
+
+
 
 Version 0.90-1.2.5
 ------------------
 
 ### Bugfixes:
 
-* Nombre de "Destinations" limit√©es
-* Question de type LDAP impossible √† cr√©er
+* Nombre de "Destinations" limitC)es
+* Question de type LDAP impossible C  crC)er
 * Erreur de suppression d'une section
-* Affichage des r√©ponses des "Zone de texte" avec mise en forme dans la liste des r√©ponse/validations de formulaires
-* Probl√®me d'affichage des champs "Affichage du champ"
-* Probl√®me d'affichage des listes d√©roulantes dans l'√©dition des questions
-* Probl√®me mise en forme texte enrichi dans ticket GLPI 0.85.4 et formcreator
+* Affichage des rC)ponses des "Zone de texte" avec mise en forme dans la liste des rC)ponse/validations de formulaires
+* ProblC(me d'affichage des champs "Affichage du champ"
+* ProblC(me d'affichage des listes dC)roulantes dans l'C)dition des questions
+* ProblC(me mise en forme texte enrichi dans ticket GLPI 0.85.4 et formcreator
 
 ### Features:
 
-* –°ategories of forms feature
+* P!ategories of forms feature
 * Add compatibility with GLPI 0.90.x
 
 
@@ -80,7 +99,7 @@ Version 0.85-1.2
 
 ###Bugfixes:
 
-* V√©rification du champs cat√©gorie √† la cr√©ation d'un formulaire
+* VC)rification du champs catC)gorie C  la crC)ation d'un formulaire
 * PHP Warning lors de l'ajout d'un formulaire
 * Antislashes in answers are broken
 * HTML descriptions no longer parsed
@@ -106,7 +125,7 @@ Version 0.85-1.1
 * targetticket, lien vers le formulaire parent
 * erreur js en administration d'une question
 * fonction updateConditions : log dans php_error.log
-* Affichage du champ non fonctionnel (et non sauvegard√©)
+* Affichage du champ non fonctionnel (et non sauvegardC))
 * crash on glpi object
 * Valideur du formulaire devient demandeur du ticket target
 * link between questions only now work with radio button
@@ -124,7 +143,7 @@ Version 0.85-1.1
 ###Features:
 
 * administration, emplacement objet glpi
-* Formulaire accept√© : Accept√© ne s'affiche pas
+* Formulaire acceptC) : AcceptC) ne s'affiche pas
 * item forms in global menu must be added at the end of it
 * Add WYSIWYG editor for textarea fields feature
 
