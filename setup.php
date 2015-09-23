@@ -7,9 +7,9 @@
 function plugin_version_formcreator ()
 {
    return array('name'       => _n('Form', 'Forms', 2, 'formcreator'),
-            'version'        => '0.90-1.2.5',
+            'version'        => '1.2.5+1.0',
             'author'         => '<a href="mailto:jmoreau@teclib.com">Jérémy MOREAU</a>
-                                  - <a href="http://www.teclib.com">Teclib\'</a>',
+                                  - <a href="http://www.teclib.com">Teclib\' </a> - Oscar Loayza B. <a href="http://www.carm.es">CARM</a>',
             'homepage'       => 'https://github.com/TECLIB/formcreator',
             'license'        => '<a href="../plugins/formcreator/LICENSE" target="_blank">GPLv2</a>',
             'minGlpiVersion' => "0.85");
@@ -80,6 +80,8 @@ function plugin_init_formcreator ()
          $PLUGIN_HOOKS['add_javascript']['formcreator'][] = 'scripts/scripts.js.php';
       }
 
+   // [CRI] : Add plugin_formcreator_postinit
+   $PLUGIN_HOOKS['post_init']['formcreator'] = 'plugin_formcreator_postinit';
       // Add a link in the main menu plugins for technician and admin panel
       $PLUGIN_HOOKS['menu_entry']['formcreator'] = 'front/formlist.php';
 
