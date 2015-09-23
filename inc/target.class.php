@@ -162,6 +162,7 @@ class PluginFormcreatorTarget extends CommonDBTM
    {
       $table = getTableForItemType(__CLASS__);
       if (!TableExists($table)) {
+		  $migration->displayMessage("Installing $table");
          $query = "CREATE TABLE IF NOT EXISTS `$table` (
                      `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                      `plugin_formcreator_forms_id` int(11) NOT NULL,
@@ -172,15 +173,8 @@ class PluginFormcreatorTarget extends CommonDBTM
          $GLOBALS['DB']->query($query) or die($GLOBALS['DB']->error());
 
       // Migration from previous version
-      } else{
-         // Migration to 0.85-1.2.5
-         if (FieldExists($table, 'plugin_formcreator_forms_id', false)) {
-            $query = "ALTER TABLE `glpi_plugin_formcreator_targets`
-                       CHANGE `plugin_formcreator_forms_id` `plugin_formcreator_forms_id` INT NOT NULL;";
-            $GLOBALS['DB']->query($query);
-         }
-
-         if(!FieldExists($table, 'itemtype', false)) {
+      } elseif(!FieldExists($table, 'itemtype', false)) {
+		  
             // Migration from version 1.5 to 1.6
             if (!FieldExists($table, 'type', false)) {
                $query = "ALTER TABLE `$table`
@@ -195,20 +189,20 @@ class PluginFormcreatorTarget extends CommonDBTM
             $GLOBALS['DB']->query($query);
 
             // Create ticket template for each configuration in DB
-            $query = "SELECT t.`urgency`, t.`priority`, t.`itilcategories_id`, t.`type`, f.`entities_id`
+            $query = "SELECT t.`plugin_formcreator_forms_id`, t.`urgency`, t.`priority`, t.`itilcategories_id`, t.`type`, f.`entities_id`
                       FROM `glpi_plugin_formcreator_targets` t, `glpi_plugin_formcreator_forms` f
                       WHERE f.`id` = t.`plugin_formcreator_forms_id`
-                      GROUP BY t.`urgency`, t.`priority`, t.`itilcategories_id`, t.`type`, f.`entities_id`";
+                      GROUP BY t.`plugin_formcreator_forms_id`, t.`urgency`, t.`priority`, t.`itilcategories_id`, t.`type`, f.`entities_id`";
             $result = $GLOBALS['DB']->query($query) or die($GLOBALS['DB']->error());
 
             $i = 0;
             while ($ligne = $GLOBALS['DB']->fetch_array($result)) {
                $i++;
-               $id = $ligne['urgency'] . $ligne['priority'] . $ligne['itilcategories_id'] . $ligne['type'];
+               $id = $ligne['plugin_formcreator_forms_id']. $ligne['urgency'] . $ligne['priority'] . $ligne['itilcategories_id'] . $ligne['type'];
 
                $template    = new TicketTemplate();
                $template_id = $template->add(array(
-                  'name'         => 'Template Formcreator ' . $i,
+                  'name'         => 'Plantilla Pedido '.$ligne['plugin_formcreator_forms_id'],
                   'entities_id'  => $ligne['entities_id'],
                   'is_recursive' => 1,
                ));
@@ -255,11 +249,16 @@ class PluginFormcreatorTarget extends CommonDBTM
             }
 
             // Prepare Mysql CASE For each ticket template
-            $mysql_case_template  = "CASE CONCAT(`urgency`, `priority`, `itilcategories_id`, `type`)";
-            foreach ($_SESSION["formcreator_tmp"]["ticket_template"] as $id => $value) {
-               $mysql_case_template .= " WHEN $id THEN $value ";
-            }
-            $mysql_case_template .= "END AS `tickettemplates_id`";
+
+			 $mysql_case_template = "0 AS `tickettemplates_id`";
+			 if (isset($_SESSION["formcreator_tmp"]["ticket_template"]))
+			 {
+				 $mysql_case_template  = "CASE CONCAT(`plugin_formcreator_forms_id`, `urgency`, `priority`, `itilcategories_id`, `type`)";
+				 foreach ($_SESSION["formcreator_tmp"]["ticket_template"] as $id => $value) {
+					$mysql_case_template .= " WHEN $id THEN $value ";
+				 }
+				 $mysql_case_template .= "END AS `tickettemplates_id`";
+			 }
 
             // Create Target ticket
             $version   = plugin_version_formcreator();
@@ -293,6 +292,7 @@ class PluginFormcreatorTarget extends CommonDBTM
              *
              * @since 0.85-1.2.3
              */
+			 /*
             $query  = "SELECT `id`, `comment`
                        FROM `$table`";
             $result = $GLOBALS['DB']->query($query);
@@ -302,8 +302,8 @@ class PluginFormcreatorTarget extends CommonDBTM
                                 WHERE `id` = ' . $line['id'];
                $GLOBALS['DB']->query($query_update) or die ($GLOBALS['DB']->error());
             }
+			*/
          }
-      }
 
       return true;
    }

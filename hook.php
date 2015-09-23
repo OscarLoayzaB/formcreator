@@ -1,4 +1,12 @@
 <?php
+// [CRI] : Add Tab para Información de Pedido
+function plugin_formcreator_postinit() {
+   global $CFG_GLPI, $PLUGIN_HOOKS;
+   foreach (PluginFormcreatorForm::getTypes(true) as $type) {
+
+      CommonGLPI::registerStandardTab($type, 'PluginFormcreatorForm');
+   }
+}
 /**
  * Install all necessary elements for the plugin
  *
@@ -107,13 +115,62 @@ function plugin_formcreator_MassiveActions($type) {
       case 'PluginFormcreatorForm' :
          return array('PluginFormcreatorForm'.MassiveAction::CLASS_ACTION_SEPARATOR.'Duplicate' =>
                                                               _x('button', 'Duplicate'));
+		break; //  [CRI] : break
 
-      // Actions for types provided by the plugin are included inside the classes
+      //  [CRI] : Actions for types provided by the plugin are included inside the classes
+      case 'Ticket' :
+         return array("PluginFormcreatorForm".MassiveAction::CLASS_ACTION_SEPARATOR.'Pedido'    => __('Pedido de catalogo','Pedido de catalogo'));
+		break;
+      default :
+		break;
+
    }
    return array();
 }
 
+//  [CRI] : Add getAddSearchOptions
+function plugin_formcreator_getAddSearchOptions($itemtype) {
+   global $CFG_GLPI;
 
+   $sopt = array();
+   
+    if ($itemtype == 'Ticket') {	
+		$sopt['informacionpedido'] = __('Informacion del pedido', 'Informacion del pedido');
+		
+		// ID de la petición del catálogo.
+		$sopt[1500]['table']      = 'glpi_plugin_formcreator_forms';
+		$sopt[1500]['name']      =  __('Pedido de Catalogo', 'Pedido de catalogo');
+		$sopt[1500]['field']      = "name";
+        $sopt[1500]['datatype']       = 'itemlink';
+		$sopt[1500]['massiveaction'] = true;
+        $sopt[1500]['itemlink_type']  = 'PluginFormcreatorForm';
+        $sopt[1500]['joinparams']     = array('beforejoin'
+                                                => array('table'      => 'glpi_plugin_formcreator_forms_items',
+                                                         'joinparams' => array('jointype' => 'itemtype_item')));
+
+
+
+
+		
+	}
+	return $sopt;
+
+ }
+
+
+/**
+ * [CRI] : Add getAddSearchOptionsDefine dropdown relations
+**/
+function plugin_formcreator_getDatabaseRelations() {
+
+   $plugin = new Plugin();
+   if ($plugin->isActivated("formcreator")) {
+	  return array('glpi_plugin_formcreator_form'
+									 => array('glpi_plugin_formcreator_form_items'
+											  => 'plugin_formcreator_forms_id'));
+   }
+   return array();
+}
 // // How to display specific update fields ?
 // // options must contain at least itemtype and options array
 // function plugin_formcreator_MassiveActionsFieldsDisplay($options=array()) {

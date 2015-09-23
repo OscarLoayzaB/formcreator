@@ -33,6 +33,7 @@ class PluginFormcreatorFormprofiles extends CommonDBRelation
             PluginFormcreatorForm::ACCESS_PUBLIC     => __('Public access', 'formcreator'),
             PluginFormcreatorForm::ACCESS_PRIVATE    => __('Private access', 'formcreator'),
             PluginFormcreatorForm::ACCESS_RESTRICTED => __('Restricted access', 'formcreator'),
+			PluginFormcreatorForm::ACCESS_GROUP => __('Group access', 'formcreator'),
          ),
          array(
             'value' => (isset($item->fields["access_rights"])) ? $item->fields["access_rights"] : 1,
@@ -75,6 +76,7 @@ class PluginFormcreatorFormprofiles extends CommonDBRelation
    static function install(Migration $migration)
    {
       $table = getTableForItemType(__CLASS__);
+	  $migration->displayMessage("Installing $table");
       if (!TableExists($table)) {
          $query = "CREATE TABLE IF NOT EXISTS `$table` (
                      `plugin_formcreator_forms_id` INT NOT NULL ,

@@ -42,6 +42,7 @@ class PluginFormcreatorCategory extends CommonDropdown
    {
       $table = getTableForItemType(__CLASS__);
       if (!TableExists($table)) {
+		  $migration->displayMessage("Installing $table");
          $query = "CREATE TABLE IF NOT EXISTS `$table` (
                      `id` int(11) NOT NULL auto_increment,
                      `name` varchar(255) NOT NULL DEFAULT '',

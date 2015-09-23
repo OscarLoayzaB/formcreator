@@ -79,6 +79,7 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
       echo '</td>';
       echo '</tr>';
 
+
       echo '<tr class="line1">';
       echo '<td width="15%">' . _n('Ticket template', 'Ticket templates', 1) . '</td>';
       echo '<td width="25%">';
@@ -696,6 +697,7 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
       $ticket  = new Ticket();
       $docItem = new Document_Item();
       $form    = new PluginFormcreatorForm();
+	  $formID = $formanswer->fields['plugin_formcreator_forms_id']; //[CRI]
       $form->getFromDB($formanswer->fields['plugin_formcreator_forms_id']);
 
       // Get default request type
@@ -745,10 +747,13 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
          $datas['due_date'] = $due_date;
       }
 
+
       // Create the target ticket
+	  $ticketID = $ticket->add($datas);
+	  /*
       if (!$ticketID = $ticket->add($datas)) {
          return false;
-      }
+      }*/
 
       // Ajout des acteurs du ticket
       $query = "SELECT id, actor_role, actor_type, actor_value, use_notification
@@ -826,6 +831,7 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
                ));
                break;
          }
+
       }
 
       // Attach documents to ticket
@@ -840,6 +846,24 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
          }
       }
 
+	  
+	  /*[CRI] Guardar  el objeto ticket el grupo asignado desde el targets 
+	  */
+		$slaticket         = new Ticket();
+		$PluginItem       		= new PluginFormcreatorForm_Item();
+		print_r($form);
+		
+		if ($slaticket->getFromDB($ticketID)) {
+					$slas_itemtype = $slaticket->getType();
+
+					$input11 = array('plugin_formcreator_forms_id' => $formID,
+							 'items_id'                        => $ticketID,
+							 'itemtype'                        => $slas_itemtype);
+							 
+					$PluginItem->add($input11);  
+
+		}
+		
       // Attach validation message as first ticket followup if validation is required and
       // if is set in ticket target configuration
       // /!\ Followup is directly saved to the database to avoid double notification on ticket
@@ -857,8 +881,6 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
                      `content`    = \"$message\"";
          $GLOBALS['DB']->query($query);
       }
-
-      return true;
    }
 
    /**
@@ -916,6 +938,7 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
    {
       $table = getTableForItemType(__CLASS__);
       if (!TableExists($table)) {
+		$migration->displayMessage("Installing $table");
          $query = "CREATE TABLE IF NOT EXISTS `$table` (
                      `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                      `name` varchar(255) NOT NULL DEFAULT '',
@@ -957,6 +980,7 @@ class PluginFormcreatorTargetTicket extends CommonDBTM
    public static function uninstall()
    {
       $query = "DROP TABLE IF EXISTS `" . getTableForItemType(__CLASS__) . "`";
+	  $GLOBALS['DB']->query('DROP TABLE IF EXISTS `glpi_plugin_formcreator_targettickets_actors`');	  
       return $GLOBALS['DB']->query($query) or die($GLOBALS['DB']->error());
    }
 

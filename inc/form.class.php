@@ -8,7 +8,8 @@ class PluginFormcreatorForm extends CommonDBTM
    const ACCESS_PUBLIC       = 0;
    const ACCESS_PRIVATE      = 1;
    const ACCESS_RESTRICTED   = 2;
-
+	//[CRI] Constante ACCESS_GROUP
+   const ACCESS_GROUP   	= 3;   
    /**
     * Check if current user have the right to create and modify requests
     *
@@ -187,6 +188,12 @@ class PluginFormcreatorForm extends CommonDBTM
                            . (($values[$field] == 1) ? ' selected ' : '') . '>'
                         . __('Restricted access', 'formcreator')
                         . '</option>';
+			// [CRI] Permission to Group
+            $output .=  '<option value="' . self::ACCESS_GROUP . '" '
+                           . (($values[$field] == 3) ? ' selected ' : '') . '>'
+                        . __('Group access', 'formcreator')
+                        . '</option>';	
+			// [CRI] End Permission to Group	
             $output .=  '</select>';
 
             return $output;
@@ -243,6 +250,9 @@ class PluginFormcreatorForm extends CommonDBTM
                case self::ACCESS_RESTRICTED :
                   return __('Restricted access', 'formcreator');
                   break;
+               case self::ACCESS_GROUP : //[CRI]
+                  return __('Group access', 'formcreator');
+                  break;				  
             }
             return '';
             break;
@@ -407,6 +417,11 @@ class PluginFormcreatorForm extends CommonDBTM
          case "PluginFormcreatorForm":
             return __('Preview');
             break;
+         case "Ticket": //[CRI]
+			if ($_SESSION['glpishow_count_on_tabs']) {
+               return self::createTabEntry(__('Informacion del pedido','Informacion del pedido'), 0);
+            }		 
+            break;	
       }
       return '';
    }
@@ -424,20 +439,39 @@ class PluginFormcreatorForm extends CommonDBTM
     */
    public static function displayTabContentForItem(CommonGLPI $item, $tabnum=1, $withtemplate=0)
    {
-      $uri = strrchr($_SERVER['HTTP_REFERER'], '/');
-      if(strpos($uri, '?')) $uri = substr($uri, 0, strpos($uri, '?'));
-      $uri = trim($uri, '/');
+	   global $DB; //[CRI]
+	   if ($item->getType()=='PluginFormcreatorForm') {
+		  $uri = strrchr($_SERVER['HTTP_REFERER'], '/');
+		  if(strpos($uri, '?')) $uri = substr($uri, 0, strpos($uri, '?'));
+		  $uri = trim($uri, '/');
 
-      switch ($uri) {
-         case "form.form.php":
-            echo '<div style="text-align: left">';
-            $item->displayUserForm($item);
-            echo '</div>';
-            break;
-      }
+		  switch ($uri) {
+			 case "form.form.php":
+				echo '<div style="text-align: left">';
+				$item->displayUserForm($item);
+				echo '</div>';
+				break;
+		  }
+	   }
+		//[CRI]
+      if ($item->getType()=='Ticket') {
+		 $ticketid = $item->getID();
+		 $formid = 0;
+		  $query = "SELECT * FROM glpi_plugin_formcreator_forms_items where itemtype='".$item->getType()."' and items_id = ". $ticketid."";
+		  //echo $query;
+		  $result = $DB->query($query);
+
+		  if ($data = $DB->fetch_assoc($result)) {
+			  $formid = $data['plugin_formcreator_forms_id'];
+		  }
+	  
+		 PluginFormcreatorInstruccion::showInstrucciontecnica($item, $formid, "PluginFormcreatorForm");
+	  
+      }	  
+	  return true;
    }
 
-
+   
    public function defineTabs($options=array())
    {
       $ong = array();
@@ -445,6 +479,9 @@ class PluginFormcreatorForm extends CommonDBTM
       $this->addStandardTab('PluginFormcreatorQuestion', $ong, $options);
       $this->addStandardTab('PluginFormcreatorFormprofiles', $ong, $options);
       $this->addStandardTab('PluginFormcreatorTarget', $ong, $options);
+	  	  // [CRI]
+	  $this->addStandardTab('PluginFormcreatorInstruccion', $ong, $options);
+	  $this->addStandardTab('PluginFormcreatorFormgroup', $ong, $options);	
       $this->addStandardTab(__CLASS__, $ong, $options);
       return $ong;
    }
@@ -554,6 +591,7 @@ class PluginFormcreatorForm extends CommonDBTM
       $form_table = getTableForItemType('PluginFormcreatorForm');
       $table_fp   = getTableForItemType('PluginFormcreatorFormprofiles');
       $where      = getEntitiesRestrictRequest( "", $form_table, "", "", true, false);
+	  /* [CRI] : Para Sacar las Categorias Select antiguo
       $query  = "SELECT $cat_table.`name`, $cat_table.`id`
                  FROM $cat_table
                  WHERE 0 < (
@@ -570,6 +608,19 @@ class PluginFormcreatorForm extends CommonDBTM
                         WHERE plugin_formcreator_profiles_id = " . (int) $_SESSION['glpiactiveprofile']['id'] . "))
                   )
                  ORDER BY $cat_table.`name` ASC";
+		*/		 
+      $query  = "SELECT $cat_table.`name`, $cat_table.`id`
+                 FROM $cat_table
+                 WHERE 0 < (
+                     SELECT COUNT($form_table.id)
+                     FROM $form_table
+                     WHERE $form_table.`plugin_formcreator_categories_id` = $cat_table.`id`
+                     AND $form_table.`is_active` = 1
+                     AND $form_table.`is_deleted` = 0
+                     AND ($form_table.`language` = '{$_SESSION['glpilanguage']}' OR $form_table.`language` = '')
+                     AND $where
+                  )
+                 ORDER BY $cat_table.`name` ASC";	
       $result = $GLOBALS['DB']->query($query);
       if (!empty($result)) {
 
@@ -580,6 +631,7 @@ class PluginFormcreatorForm extends CommonDBTM
 
             $where       = getEntitiesRestrictRequest( "", $form_table, "", "", true, false);
             $table_fp    = getTableForItemType('PluginFormcreatorFormprofiles');
+			/* [CRI] : Para Sacar la lista de pedidos (query antiguo)
             $query_forms = "SELECT $form_table.id, $form_table.name, $form_table.description
                             FROM $form_table
                             WHERE $form_table.`plugin_formcreator_categories_id` = {$category['id']}
@@ -592,9 +644,21 @@ class PluginFormcreatorForm extends CommonDBTM
                                FROM $table_fp
                                WHERE plugin_formcreator_profiles_id = " . (int) $_SESSION['glpiactiveprofile']['id'] . "))
                             ORDER BY $form_table.name ASC";
+			*/			
+            $query_forms = "SELECT $form_table.id, $form_table.name, $form_table.description
+                            FROM $form_table
+                            WHERE $form_table.`plugin_formcreator_categories_id` = {$category['id']}
+                            AND $form_table.`is_active` = 1
+                            AND $form_table.`is_deleted` = 0
+                            AND ($form_table.`language` = '{$_SESSION['glpilanguage']}' OR $form_table.`language` = '')
+                            AND $where
+                            ORDER BY $form_table.name ASC";
             $result_forms = $GLOBALS['DB']->query($query_forms);
             $i = 0;
             while ($form = $GLOBALS['DB']->fetch_array($result_forms)) {
+			// [CRI] Check with method viewFormInListForm access to Form
+			if (PluginFormcreatorForm::viewFormInListForm($form['id'])==1) // CRI : Funcion para comprobar acceso a Pedido
+			{
                $i++;
                echo '<tr class="line' . ($i % 2) . '">';
                echo '<td>';
@@ -612,6 +676,7 @@ class PluginFormcreatorForm extends CommonDBTM
                echo '</tr>';
             }
 
+          }// [CRI]
          echo '</table>';
          echo '<br />';
          }
@@ -1044,6 +1109,8 @@ class PluginFormcreatorForm extends CommonDBTM
 
       // Delete logs of the plugin
       $GLOBALS['DB']->query('DELETE FROM `glpi_logs` WHERE itemtype = "' . __CLASS__ . '"');
+	  
+	  $GLOBALS['DB']->query('DROP TABLE IF EXISTS `glpi_plugin_formcreator_formvalidators`');	  
 
       return true;
    }
@@ -1212,6 +1279,51 @@ class PluginFormcreatorForm extends CommonDBTM
       return true;
    }
 
+   public function getSpecificMassiveActions($checkitem=NULL) {
+      $actions = parent::getSpecificMassiveActions($checkitem);
+      return $actions;
+	  
+   }
+   /**
+    * @since version 0.85
+    *
+    * @see CommonDBTM::showMassiveActionsSubForm()
+   **/
+   static function showMassiveActionsSubForm(MassiveAction $ma) {
+      global $CFG_GLPI;
+      switch ($ma->getAction()) {
+         case 'Generate':
+            $formcreator = new self();
+            $formcreator->showFormMassiveAction($ma);
+            return true;
+            break;
+         case 'Pedido':
+				/*
+				Dropdown::show('PluginFormcreatorForm', array(
+				  'name'      => "plugin_formcreator_forms_id",
+				  'entity'    => $_SESSION['glpiactive_entity']
+				  ));
+				  */
+					$table = getTableForItemtype('PluginFormcreatorForm');
+					$sections = array();
+					$sql = "SELECT `id`, `name`
+							FROM $table
+							WHERE entities_id = ".$_SESSION['glpiactive_entity']."
+							ORDER BY `name`";
+					$result = $GLOBALS['DB']->query($sql);
+					while ($section = $GLOBALS['DB']->fetch_array($result)) {
+					   $sections[$section['id']] = $section['name'];
+					}
+					$sections=array("0"=>"----") + $sections; 					
+					Dropdown::showFromArray('plugin_formcreator_forms_id', $sections, array());				  
+			   
+            echo Html::submit(_x('button','Post'), array('name' => 'massiveaction'));
+            return true;
+            break;			
+      }
+	  
+       return parent::showMassiveActionsSubForm($ma);
+   } 
    /**
     * Execute massive action for PluginFormcreatorFrom
     *
@@ -1234,9 +1346,384 @@ class PluginFormcreatorForm extends CommonDBTM
                   $ma->itemDone($item->getType(), $id, MassiveAction::ACTION_KO);
                }
             }
-            return;
+			//return;
+            break; //[CRI]
+ 	     case "Pedido" : 
+			if ($item->getType() == 'Ticket') {
+				// [CRI]
+				$Plugin       			= new PluginFormcreatorForm();				
+				$PluginItem       		= new PluginFormcreatorForm_Item();
+				$Target 				= new PluginFormcreatorTarget();
+				$helpdesk 				= new PluginFormcreatorTargetTicket();					
+				$input = $ma->getInput();
+				
+				foreach ($ids as $key) {
+					$listForm = $PluginItem->find("items_id = ".$key." and itemtype = '".$item->getType()."'");
+					if (empty($listForm))
+					{
+						$input11 = array('plugin_formcreator_forms_id' => $input['plugin_formcreator_forms_id'],
+								 'items_id'                        => $key,
+								 'itemtype'                        => $item->getType());
+						$PluginItem->add($input11);   
+					}
+
+					else
+					{
+						foreach ($listForm as $form_id => $value) {
+					   
+						   $input12 = array('id' => $form_id);
+							$input12['plugin_formcreator_forms_id'] = $input['plugin_formcreator_forms_id'];
+							$input12['items_id'] = $key;
+							$input12['itemtype'] = $item->getType();
+					   
+							$PluginItem->update($input12);
+					   }
+				 
+					}
+					
+					//Actualizar Ticket
+					PluginFormcreatorForm::fromcreatorDropUserAndGrouponTicket($key); //
+					PluginFormcreatorForm::updateTicketFromForm($input['plugin_formcreator_forms_id'],$key);
+					
+					$ma->itemDone($item->getType(), $key, MassiveAction::ACTION_OK);
+				
+				}
+			}
+        
+			break;
+			//parent::processMassiveActionsForOneItemtype($ma, $item, $ids);
+   }
+}
+
+
+
+   /**
+    * Type than could be linked to a Version
+    *
+    * @param $all boolean, all type, or only allowed ones
+    *
+    * @return array of types
+   **/
+   static function getTypes($all=false) {
+	global $LANG;
+      if ($all) {
+         return array('Ticket');
+		 //return self::$types;
       }
-      parent::processMassiveActionsForOneItemtype($ma, $item, $ids);
+
+      // Only allowed types
+      $types = array('Ticket');
+	  //$types = self::$types;
+
+      foreach ($types as $key => $type) {
+	  	  //echo $type."<br>";
+         if (!($item = getItemForItemtype($type))) {
+            continue;
+         }
+
+         if (!$item->canView()) {
+            unset($types[$key]);
+         }
+      }
+      return $types;
+   } 
+	static function fromcreatorDropUserAndGrouponTicket($ticketid) {
+	  global $DB;
+	  
+         $crit = array('tickets_id' => $ticketid,
+                       'type'       => 2);	
+		foreach ($DB->request('glpi_groups_tickets', $crit) as $data) {
+		   $gu = new Group_Ticket();
+		   $gu->delete($data);
+		}
+
+		foreach ($DB->request('glpi_tickets_users', $crit) as $data) {
+			$gu = new Ticket_User();
+			$gu->delete($data);
+		}
+		return true;
+	}   
+   
+   // CRI : Funcion getGroupForm, devuelve un array con los grupos del pedido.	   
+   static function getGroupForm($idform) {
+		global $DB;
+		$array = array();
+		$query = "SELECT items_id FROM `glpi_plugin_formcreator_forms_items`
+                 LEFT JOIN `glpi_groups` ON (`glpi_groups`.`id` = `glpi_plugin_formcreator_forms_items`.`items_id`)
+                 WHERE    `glpi_plugin_formcreator_forms_items`.`itemtype` = 'Group'
+						AND `glpi_plugin_formcreator_forms_items`.`plugin_formcreator_forms_id` = '$idform'";
+
+		foreach ($DB->request($query) as $data) {
+			$array[] = $data['items_id'];
+		}
+		return $array;
+   } 
+   
+   // CRI : Funcion checkGroupUserFromForm, para comprobar acceso al Pedido por grupo, si el usuario pertenece al mismo grupo autorizado.	   
+     static function checkGroupUserFromForm($formID) { 
+		//$formID = $_REQUEST['id'];
+		$grupos = Group_User::getUserGroups($_SESSION['glpiID']);
+		$gruposUsuario=array("0");
+		$found = 0;
+
+		foreach ($grupos as $grupo) {
+			if (in_array($grupo['id'],PluginFormcreatorForm::getGroupForm($formID))) {
+				$found = 1;
+			}
+		}
+		return $found;
+	 }
+
+   // CRI : Funcion checkRestrictedProfileInForm, para comprobar acceso al Pedido por Autorizacion a Perfil de usuario.	 
+   static function checkRestrictedProfileInForm($idform) {
+		global $DB;
+		$existe = 0;
+		$query = "SELECT plugin_formcreator_forms_id 
+					FROM glpi_plugin_formcreator_formprofiles 
+					WHERE plugin_formcreator_profiles_id = " . (int) $_SESSION['glpiactiveprofile']['id'] . " and plugin_formcreator_forms_id ='$idform' ";
+
+      foreach ($DB->request($query) as $data) {
+         $existe = 1;
+      }
+	 						
+	return $existe;
+   }
+   
+   // CRI : Funcion viewFormInListForm, para comprobar acceso al Pedido, por tipos de autorizacion.
+     static function viewFormInListForm($formID) { 
+	  $ver=0;
+	  
+	  //Obtener el tipo de acceso
+	   $form       = new PluginFormcreatorForm();
+	   $form->getFromDB($formID);
+	   
+	   if (isset($form->fields['access_rights'])) {
+			$access = $form->fields['access_rights'];
+		} else {
+			$access = 0;
+		}
+
+	  if ($_SESSION['glpiactiveprofile']['id'] != 4)
+	   {
+	   
+		   switch ($access) {
+			  case self::ACCESS_PUBLIC : //PUBLIC: acceso publico al pedido
+					$ver=1;
+				 break;
+			  case self::ACCESS_PRIVATE : // PRIVATE: es 0 porque no esta implementado
+					$ver=0;
+				 break;				 
+			  case self::ACCESS_RESTRICTED : // RESTRICTED: es regringido por perfil, comprobar el acceso con la funcion checkRestrictedProfileInForm
+					if (PluginFormcreatorForm::checkRestrictedProfileInForm($formID)==1)
+					{
+						$ver=1;
+					}
+				 break;
+			  case self::ACCESS_GROUP : // GROUP: es regringido por grupo, comprobar el acceso con la funcion checkGroupUserFromForm
+					if (PluginFormcreatorForm::checkGroupUserFromForm($formID)==1)
+					{
+						$ver=1;
+					}
+				 break;				 
+			  default:
+				 return 0;
+		   }
+	   }
+	   else
+	   {
+		   $ver=1;
+	   }
+	  
+		return $ver;
+	 
+	 }
+
+ // Llamada desde plugin Catalogo
+ 
+   static function getHelpdeskListForm() {
+      global $CFG_GLPI;
+
+      echo '<div class="center">';
+
+      $form = new PluginFormcreatorForm;
+      $listForm = $form->find("is_active = '1'");
+
+      $nbForm = 0;
+      if(empty($listForm)) {
+         # No formular yet
+         echo __("No se ha encontrado ningún pedido de catálogo.","No se ha encontrado ningún pedido de catálogo.");
+      } else {
+
+         echo"<table class='tab_cadre_fixe fix_tab_height'>";
+            echo "<tr>";
+               echo "<th>ID</th>";
+               echo "<th>".__("Pedido de catálogo","Pedido de catálogo")."</th>";
+               echo "<th>".__("Descripcion","Descripcion")."</th>";
+               echo "<th>".__("Idioma","Idioma")."</th>";
+            echo "</tr>";
+
+            foreach ($listForm as $form_id => $value) {
+
+				if (PluginFormcreatorForm::viewFormInListForm($form_id)==1) // CRI : Funcion para comprobar acceso a Pedido
+				{
+				   if(Session::haveAccessToEntity($value['entities_id'],$value['is_recursive'])) {
+
+					  $link = $CFG_GLPI["root_doc"]."/plugins/formcreator/front/showform.php";
+
+					 if (
+						   Session::haveRight('config', UPDATE)
+						   ||
+						   empty($value['language'])
+						   ||
+						   $value['language'] == $_SESSION["glpilanguage"]
+						) {
+					  echo "<tr>";
+						 echo "<td class='center'>".$form_id."</td>";
+						 echo '<td><a href='.$link.'?id='.$form_id.'>'.$value['name'].'</a></td>';
+						 echo "<td>".$value['content']."</td>";
+						 echo "<td>".$value['language']."</td>";
+					  echo "</tr>";
+
+					  $nbForm++;
+					  }
+
+				   }
+				}
+            }
+
+            if(!$nbForm) {
+               echo '<tr>';
+               echo '<td class="center" colspan="3">'.__("No se ha encontrado ningún pedido de catálogo.","No se ha encontrado ningún pedido de catálogo.").'</td>';
+               echo '</tr>';
+            }
+
+         echo "</table>";
+      }
+
+      echo "</div>";
+
+   } 
+   
+   
+      static function getHelpdeskListFormParam($filtro) {
+      global $DB, $CFG_GLPI; //incluir db
+      echo '<div class="center">';
+	  
+	  
+		  $sqlservicios = "select  s.id as services_id, s.name as servicio, f.id as forms_id, f.name as pedido, f.content, f.entities_id, f.is_recursive, f.language from glpi_plugin_formcreator_forms f
+									left outer join (select r.parent_id, s.id, s.name from glpi_plugin_relation_relations  r 
+															left outer join glpi_plugin_servicios_servicios s on (s.id =r.items_id)
+															where r.parent_type='PluginFormcreatorForm' 
+																	and r.itemtype='PluginServiciosServicio' ) s on (s.parent_id = f.id) 
+									where f.is_active = '1'  
+									and (f.name like '%$filtro%' or s.name like '%$filtro%' or f.content like '%$filtro%')
+									order by s.name, f.name";
+		  $result = $DB->query($sqlservicios);
+	  
+	  
+	  
+      $nbForm = 0;
+      if($DB->numrows($result)==0) {
+         # No formular yet
+         echo __("No se ha encontrado ningún pedido de catálogo.","No se ha encontrado ningún pedido de catálogo.");
+      } else {
+
+         echo"<table class='tab_cadre_fixe fix_tab_height'>";
+            echo "<tr>";
+               echo "<th>".__("Servicio","Servicio")."</th>";				   
+               echo "<th>".__("Pedido de catálogo","Pedido de catálogo")."</th>";
+               echo "<th>".__("Descripcion","Descripcion")."</th>";
+            echo "</tr>";
+
+			while ($data = $DB->fetch_assoc($result)) {
+
+				if (PluginFormcreatorForm::viewFormInListForm($data['forms_id'])==1) // CRI : Funcion para comprobar acceso a Pedido
+				{
+				   if(Session::haveAccessToEntity($data['entities_id'],$data['is_recursive'])) {
+
+					  $link = $CFG_GLPI["root_doc"]."/plugins/formcreator/front/showform.php";
+					  $links = $CFG_GLPI["root_doc"]."/plugins/servicios/front/servicio.form.php";
+
+					 if (
+						   Session::haveRight('config', UPDATE)
+						   ||
+						   empty($data['language'])
+						   ||
+						   $data['language'] == $_SESSION["glpilanguage"]
+						) {
+					  echo "<tr>";
+						 $servicio="";
+						 if (!empty($data['servicio'])) {
+							$servicio= "<a href=".$links."?id=".$data['services_id'].">".$data['servicio']."</a>";
+						 }
+						 echo '<td>'.$servicio.'</td>';					 
+						 echo '<td><a href='.$link.'?id='.$data['forms_id'].'>'.$data['pedido'].'</a></td>';
+						 echo "<td>".$data['content']."</td>";
+
+					  echo "</tr>";
+
+					  $nbForm++;
+					  }
+
+				   }
+				}
+            }
+
+            if(!$nbForm) {
+               echo '<tr>';
+               echo '<td class="center" colspan="4">'.__("No se ha encontrado ningún pedido de catálogo.","No se ha encontrado ningún pedido de catálogo.").'</td>';
+               echo '</tr>';
+            }
+
+         echo "</table>";
+      }
+
+      echo "</div>";
+
    }
 
+
+   static function getTemplateTicketFromForm($idform) {
+		global $DB;
+		$templates_id = 0;
+		$query = "SELECT ftt.tickettemplates_id, ft.plugin_formcreator_forms_id FROM glpi_plugin_formcreator_targets ft 
+						INNER JOIN glpi_plugin_formcreator_targettickets ftt ON (ftt.id = ft.items_id and ft.itemtype = 'PluginFormcreatorTargetTicket')
+						where ft.plugin_formcreator_forms_id='$idform' ";
+
+		  foreach ($DB->request($query) as $data) {
+			$templates_id = $data['tickettemplates_id'];
+		  }
+	 						
+		return $templates_id;
+   } 
+
+   static function updateTicketFromForm($idform,$idticket) {
+		global $DB;
+		$datas   = array();
+		$templates_id = PluginFormcreatorForm::getTemplateTicketFromForm($idform);
+		$ttp                  = new TicketTemplatePredefinedField();
+		$predefined_fields    = $ttp->getPredefinedFields($templates_id, true);	
+
+		  
+		$Ticket         = new Ticket();
+		$listaObjetos = $Ticket->find("id = '$idticket'");
+		//$listaobjetos es un array que contiene, por cada ticket que comple la condición del find, un array con los campos del ticket
+		$clave = array_keys($listaObjetos);
+		
+		if (isset($clave[0])){
+			if (isset($listaObjetos[$clave[0]])){
+				$datas = $listaObjetos[$clave[0]];
+
+				unset($datas['urgency']); // 							
+				unset($datas['priority']); //
+				unset($datas['type']); // 
+				unset($datas['itilcategories_id']); // 
+				unset($datas['slas_id']); // 
+				
+				$datas = array_merge($datas, $predefined_fields);							
+				$Ticket->update($datas);
+			}
+		}   
+   
+   }
 }
