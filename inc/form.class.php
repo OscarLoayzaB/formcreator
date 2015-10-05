@@ -1726,4 +1726,15 @@ class PluginFormcreatorForm extends CommonDBTM
 		}   
    
    }
+   
+    static function ArrayListOfItemtypes() {
+		$activos = array();
+		$a = $_SESSION["glpiactiveprofile"]["helpdesk_item_type"];
+		foreach ($a as $k => $v) {
+			$item = getItemForItemtype($v);
+			$activos[$v] = $item->getTypeName();
+			//	echo "\$a[$k] => $v.\n";
+		}
+		return $activos;
+	}
 }

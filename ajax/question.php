@@ -109,7 +109,8 @@ $rand = mt_rand();
             <div id="glpi_objects_field">
                <?php
                   $optgroup = array(
-                                 __("Assets") => array(
+                                 __("Assets") => PluginFormcreatorForm::ArrayListOfItemtypes() , // CRI. Listado de Items Dinamico
+								 /*array(
                                     'Computer'           => _n("Computer", "Computers", 2),
                                     'Monitor'            => _n("Monitor", "Monitors", 2),
                                     'Software'           => _n("Software", "Software", 2),
@@ -118,7 +119,7 @@ $rand = mt_rand();
                                     'Printer'            => _n("Printer", "Printers", 2),
                                     'Cartridgeitem'      => _n("Cartridge", "Cartridges", 2),
                                     'Consumableitem'     => _n("Consumable", "Consumables", 2),
-                                    'Phone'              => _n("Phone", "Phones", 2)),
+                                    'Phone'              => _n("Phone", "Phones", 2)),*/
                                  __("Assistance") => array(
                                     'Ticket'             => _n("Ticket", "Tickets", 2),
                                     'Problem'            => _n("Problem", "Problems", 2),
