@@ -77,7 +77,7 @@ function plugin_init_formcreator ()
 
          // Add specific JavaScript
          $PLUGIN_HOOKS['add_javascript']['formcreator'][] = 'scripts/forms-validation.js.php';
-         $PLUGIN_HOOKS['add_javascript']['formcreator'][] = 'scripts/scripts.js.php';
+         //$PLUGIN_HOOKS['add_javascript']['formcreator'][] = 'scripts/scripts.js.php';
       }
 
    // [CRI] : Add plugin_formcreator_postinit
